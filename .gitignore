@@ -1,4 +1,6 @@
 data/
 **/*.ipynb
-# .ENV
+.env
 .pycache
+__pycache__
+data_restoration.egg-info/
