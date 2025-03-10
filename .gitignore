@@ -1,4 +1,4 @@
 data/
-**/*.ypinb
+**/*.ipynb
 # .ENV
 .pycache
