@@ -1,0 +1,4 @@
+data/
+**/*.ypinb
+# .ENV
+.pycache
