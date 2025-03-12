@@ -12,9 +12,8 @@ from google.cloud import storage
 def preprocessed_data(mode='gcloud'):
 
     '''
-    Process l'ensemble des données en batch et les stocke dans un csv
+    Process l'ensemble des données en batch et les stocke dans un h5
     '''
-    # Retrieve `query` data as a DataFrame iterable
     data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset.h5")
     temp_processed_path = Path(PATH_PROCESSED_DATA).joinpath("temp.h5")
 
@@ -71,3 +70,51 @@ def preprocessed_data(mode='gcloud'):
             print('chunk_id : ', chunk_id)
 
     print('Data ready!')
+
+
+def preprocessed_data_small():
+    data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_small.h5")
+    heads_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_head_small.h5")
+    data_processed_exists = data_processed_path.is_file()
+    heads_exists = heads_path.is_file()
+    if not data_processed_exists :
+        chunk_size = 1000
+
+        filelist = glob.glob(f"{PATH_RAW_DATA}*.jpg")
+        chunk_lists = [filelist[i:i+chunk_size] for i in range(0, len(filelist), chunk_size)]
+        for chunk_id, chunk in enumerate(chunk_lists) :
+            df = pd.DataFrame([load_img(file) for file in chunk], columns=['image'])
+            df['heights'] = df['image'].map(lambda x: x.size[1])
+            df_filtered = df[df["heights"].between(100,500)]
+            df_final = df_filtered["image"].map(lambda x: x.resize((64,64))).map(img_to_array)
+            matrix = np.stack(df_final.to_numpy()).astype(np.int16)
+
+            if chunk_id == 0 :
+                with h5py.File(data_processed_path,"w") as f :
+                    f.create_dataset("processed_dataset_small",data=matrix,chunks=matrix.shape,maxshape=(None,64,64,3),compression='gzip',
+                    compression_opts=9)
+            else :
+                with h5py.File(data_processed_path,"a") as f :
+                    f["processed_dataset_small"].resize((f["processed_dataset_small"].shape[0] + matrix.shape[0]), axis = 0)
+                    f["processed_dataset_small"][-matrix.shape[0]:] = matrix
+            print('chunk_id : ', chunk_id)
+    print('Data ready!')
+
+    if not heads_exists :
+        filelist2 = glob.glob(f"{PATH_RAW_HEAD}*.png")
+        chunk_size = 1000
+        chunk_lists2 = [filelist2[i:i+chunk_size] for i in range(0, len(filelist2), chunk_size)]
+        for chunk_id, chunk in enumerate(chunk_lists2) :
+            df = pd.DataFrame([load_img(file) for file in chunk], columns=['image'])
+            df_final = df["image"].map(img_to_array)
+            matrix = np.stack(df_final.to_numpy()).astype(np.int16)
+            if chunk_id == 0 :
+                with h5py.File(heads_path,"w") as f :
+                    f.create_dataset("processed_dataset_head_small",data=matrix,chunks=matrix.shape,maxshape=(None,64,64,3),compression='gzip',
+                    compression_opts=9)
+            else :
+                with h5py.File(heads_path,"a") as f :
+                    f["processed_dataset_head_small"].resize((f["processed_dataset_head_small"].shape[0] + matrix.shape[0]), axis = 0)
+                    f["processed_dataset_head_small"][-matrix.shape[0]:] = matrix
+            print('chunk_id : ', chunk_id)
+    print('Cats heads ready!')
