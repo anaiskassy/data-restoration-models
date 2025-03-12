@@ -4,3 +4,5 @@ data/
 .pycache
 __pycache__
 data_restoration.egg-info/
+.DS_Store
+notebooks/

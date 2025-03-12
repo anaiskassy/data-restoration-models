@@ -4,26 +4,48 @@ from pathlib import Path
 from random import sample
 from data_restoration.params import *
 from data_restoration.preprocessing import preprocessed_data
+import h5py
+from google.cloud import storage
 
 
-def load_data(nrows = 1000,chunksize=None):
+def load_data_from_local(nrows='all',workbook=False,chunk_id=None):
     """
-    Loads image data into a DataFrame.
-    Returns:
-        pd.DataFrame: DataFrame containing image arrays.
+    load data h5 from local
     """
-    data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_images.csv")
-    if not data_processed_path.is_file() :
-        preprocessed_data()
-
-    if nrows == 'all' :
-        if chunksize == None :
-            images = pd.read_csv(data_processed_path)
+    if chunk_id == None :
+        if workbook :
+            data_processed_path = Path(f'.{PATH_PROCESSED_DATA}').joinpath("processed_dataset.h5")
         else :
-            images = pd.read_csv(data_processed_path,chunksize=chunksize)
+            data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset.h5")
     else :
-        if chunksize == None :
-            images = pd.read_csv(data_processed_path,nrows=nrows)
+        if workbook :
+            data_processed_path = Path(f'.{PATH_PROCESSED_DATA}').joinpath(f"processed_dataset_chunk_{chunk_id}.h5")
         else :
-            images = pd.read_csv(data_processed_path,chunksize=chunksize,nrows=nrows)
+            data_processed_path = Path(PATH_PROCESSED_DATA).joinpath(f"processed_dataset_chunk_{chunk_id}.h5")
+    if not data_processed_path.is_file() :
+        print('No data at', data_processed_path)
+        #preprocessed_data()
+
+    with h5py.File(data_processed_path,"r") as dset :
+        if nrows == 'all' :
+            images = dset['processed_dataset'][:]
+        else :
+            images = dset['processed_dataset'][:nrows]
+    return images
+
+
+def load_data_from_cloud(n_chunk=1,workbook=False):
+    client = storage.Client()
+    blobs = list(client.get_bucket(BUCKET_NAME).list_blobs(prefix="dataset"))
+    for n in range(n_chunk) :
+        if workbook :
+            data_processed_path = Path(f'.{PATH_PROCESSED_DATA}').joinpath(f"processed_dataset_chunk_{n}.h5")
+        else :
+            data_processed_path = Path(PATH_PROCESSED_DATA).joinpath(f"processed_dataset_chunk_{n}.h5")
+        blob_n = blobs[n]
+        blob_n.download_to_filename(data_processed_path)
+        with h5py.File(data_processed_path,"r") as dset :
+            images_chunk = dset['processed_dataset'][:]
+        images = images_chunk if n == 0 else np.vstack([images,images_chunk])
+
     return images
