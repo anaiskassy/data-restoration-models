@@ -23,3 +23,9 @@ def damaging(X : np.ndarray ,percent : int,random : bool = True ):
                     X_damaged[i,j,k] = 255
 
     return X_damaged
+
+def damaging_dataset(dataset,percent=5,rand=False):
+    dataset_damaged = dataset.copy()
+    for i in range(dataset.shape[0]) :
+        dataset_damaged[i,:,:,:] = damaging(dataset[i,:,:,:],percent,rand)
+    return dataset_damaged
