@@ -8,6 +8,64 @@ import h5py
 from google.cloud import storage
 
 
+def load_data_small(nrows='all',workbook=False):
+    """
+    load data h5 from local dataset_small
+    """
+    # Indification du chemin d'accès :
+    if workbook : # si lancement du code depuis un notebook : dossier parent supplémentaire
+        data_processed_path = Path(f'.{PATH_PROCESSED_DATA}').joinpath("processed_dataset_small.h5")
+    else : # si lancement depuis le terminal
+        data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_small.h5")
+
+    # vérification que le fichier existe :
+    if not data_processed_path.is_file() :
+        print('No data at', data_processed_path)
+
+    # Load les données :
+    with h5py.File(data_processed_path,"r") as dset : # 'r' read, 'with' ouvre le fichier en question
+        if nrows == 'all' :
+            images = dset['processed_dataset_small'][:]
+        else :
+            images = dset['processed_dataset_small'][:nrows]
+    return images # matrice numpy de format (nrows,64,64,3)
+
+
+def load_data_head_small(nrows='all',workbook=False):
+    """
+    load data h5 from local dataset_small
+    """
+    # Indification du chemin d'accès :
+    if workbook : # si lancement du code depuis un notebook : dossier parent supplémentaire
+        data_processed_path = Path(f'.{PATH_PROCESSED_DATA}').joinpath("processed_dataset_head_small.h5")
+    else : # si lancement depuis le terminal
+        data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_head_small.h5")
+
+    # vérification que le fichier existe :
+    if not data_processed_path.is_file() :
+        print('No data at', data_processed_path)
+
+    # Load les données :
+    with h5py.File(data_processed_path,"r") as dset : # 'r' read, 'with' ouvre le fichier en question
+        if nrows == 'all' :
+            images = dset['processed_dataset_head_small'][:]
+        else :
+            images = dset['processed_dataset_head_small'][:nrows]
+    return images
+
+
+def load_data_small_all(nrows='all',workbook=False): # nrows pour chaque dataset
+    image1 = load_data_small(nrows,workbook)
+    image2 = load_data_head_small(nrows,workbook)
+
+    images = np.vstack([image1,image2]) # permet de faire 1 seule matrice de taille (2nrows,64,64,3)
+    return images
+
+
+
+
+## Old versions
+
 def load_data_from_local(nrows='all',workbook=False,chunk_id=None):
     """
     load data h5 from local
