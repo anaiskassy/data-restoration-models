@@ -10,7 +10,7 @@ def run_base_model(data_train,
                    generator,gen_opti,
                    discriminator,disc_opti,
                    n_epochs=5,batch_size=100,workbook=False,
-                   checkpoint=1,reload_w = False) :
+                   checkpoint=1,reload_w=False) :
     # preprocessing data
     data_train_damaged = damaging_dataset(data_train) /255
     data_train = data_train / 255
