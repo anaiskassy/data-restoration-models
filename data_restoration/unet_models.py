@@ -9,62 +9,89 @@ import h5py
 import os
 from data_restoration.params import *
 
-def init_base_model(lr = 1e-4):
-    generator = make_generator_base_model()
-    discriminator = make_discriminator_base_model()
-    gen_opti = generator_optimizer_base(lr)
-    disc_opti = discriminator_optimizer_base(lr)
-    return generator,gen_opti,discriminator,disc_opti
+def init_unet_model():
+    generator_unet = make_generator_unet_model()
+    discriminator_unet = make_discriminator_unet_model()
+    gen_opti_unet = generator_optimizer_unet()
+    disc_opti_unet = discriminator_optimizer_unet()
+    return generator_unet,gen_opti_unet,discriminator_unet,disc_opti_unet
 
-
-def make_generator_base_model():
+def make_generator_unet_model() :
     model = tf.keras.Sequential()
-
-    model.add(layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False,input_shape=(64, 64, 3)))
+    # normalization
+    model.add(layers.Normalization(input_shape=(64,64,3)))
+    #---------------encoding---------------#
+    # down 1
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False,input_shape=(64, 64, 3)))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 2
+    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 3
+    model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 4
+    model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 5
+    model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 6
+    model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    #---------------decoding---------------#
+    # up 6
+    model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
     model.add(layers.ReLU())
-
-    model.add(layers.Conv2D(64, (5, 5), strides=(1, 1), padding='same', use_bias=False))
+    # up 5
+    model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
     model.add(layers.ReLU())
-
-    model.add(layers.Conv2D(3, (5, 5), strides=(1, 1), padding='same', use_bias=False, activation='sigmoid'))
-
+    # up 4
+    model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.ReLU())
+    # up 3
+    model.add(layers.Conv2DTranspose(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.ReLU())
+    # up 2
+    model.add(layers.Conv2DTranspose(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.ReLU())
+    # up 1
+    model.add(layers.Conv2DTranspose(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.ReLU())
+    # out
+    model.add(layers.Conv2DTranspose(64, (5, 5), activation='sigmoid', strides=(1, 1), padding='same', use_bias=False))
     return model
 
-def generator_loss_base(fake_output):
-    cross_entropy = tf.keras.losses.BinaryCrossentropy()
-    return cross_entropy(tf.ones_like(fake_output), fake_output)
+def generator_optimizer_unet():
+    pass
 
-def generator_optimizer_base(learning_rate = 1e-4):
-    return tf.keras.optimizers.legacy.Adam(learning_rate)
+def generator_loss_unet(fake_output):
+    pass
+
+def make_discriminator_unet_model() :
+    pass
+
+def discriminator_optimizer_unet() :
+    pass
+
+def discriminator_loss_unet(real_output, fake_output):
+    pass
 
 
-def make_discriminator_base_model():
-    model = tf.keras.Sequential()
-    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',input_shape=(64, 64, 3)))
-    model.add(layers.ReLU())
-    model.add(layers.Dropout(0.3))
-
-    model.add(layers.Conv2D(128, (5, 5), strides=(3, 3), padding='same'))
-    model.add(layers.ReLU())
-    model.add(layers.Dropout(0.3))
-
-    model.add(layers.Flatten())
-    model.add(layers.Dense(1,activation='sigmoid'))
-
-    return model
-
-def discriminator_loss_base(real_output, fake_output):
-    cross_entropy = tf.keras.losses.BinaryCrossentropy()
-    real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-    total_loss = real_loss + fake_loss
-    return total_loss
-
-def discriminator_optimizer_base(learning_rate = 1e-4):
-    return tf.keras.optimizers.legacy.Adam(learning_rate)
 
 @tf.function
-def train_step_base_model(images,images_damaged,
+def train_step_unet_model(images,images_damaged,
                           generator,generator_optimizer,
                           discriminator,discriminator_optimizer):
 
@@ -74,8 +101,8 @@ def train_step_base_model(images,images_damaged,
       real_output = discriminator(images, training=True)
       fake_output = discriminator(generated_images, training=True)
 
-      gen_loss = generator_loss_base(fake_output)
-      disc_loss = discriminator_loss_base(real_output, fake_output)
+      gen_loss = generator_loss_unet(fake_output)
+      disc_loss = discriminator_loss_unet(real_output, fake_output)
 
     gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
@@ -100,7 +127,7 @@ def train_base_model(data,data_damaged,
         for i in range(nb_batches) :
             image_batch = data[batch_size*i : (i+1)*batch_size,:,:,:]
             image_damaged_batch = data_damaged[batch_size*i : (i+1)*batch_size,:,:,:]
-            loss_gen, loss_disc = train_step_base_model(image_batch,image_damaged_batch,
+            loss_gen, loss_disc = train_step_unet_model(image_batch,image_damaged_batch,
                                                         generator=generator,
                                                         generator_optimizer=generator_optimizer,
                                                         discriminator=discriminator,

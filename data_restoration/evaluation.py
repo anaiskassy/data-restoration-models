@@ -78,3 +78,30 @@ def evaluation_base_model(data_test,generator,discriminator,workbook=False) :
 
 def lire_metrics(string):
     return float(string.replace('tf.Tensor(','').replace(', shape=(), dtype=float32)',''))
+
+
+# def evaluation_base_model_2(data_test,generator,discriminator,workbook=False) :
+#     # preprocessing
+#     data_test_damaged = damaging_opti_dataset(data_test) /255
+#     data_test = data_test / 255
+
+#     # testing models
+#     generated_images = generator(data_test_damaged, training=False)
+#     real_output = discriminator(data_test, training=False)
+#     fake_output = discriminator(generated_images, training=True)
+
+#     gen_loss = generator_loss_base(fake_output)
+#     disc_loss = discriminator_loss_base(real_output, fake_output)
+
+#     metrics = pd.DataFrame({'history_generator_loss' : gen_loss,'history_discriminator_loss' : disc_loss})
+#     local_path_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test', f"{time.strftime('%Y%m%d-%H%M%S')}.csv")
+#     path_dir_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test')
+#     if workbook :
+#         local_path_metrics = os.path.join('..',local_path_metrics)
+#         path_dir_metrics = os.path.join('..',path_dir_metrics)
+#     if not os.path.exists(path_dir_metrics) :
+#         os.makedirs(path_dir_metrics)
+#     metrics.to_csv(local_path_metrics)
+#     print('metrics saved')
+
+#     return gen_loss, disc_loss, generated_images
