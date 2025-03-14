@@ -17,9 +17,9 @@ history_gen, history_disc , predictions_finales , progressive_output = run_base_
     gen_opti=gen_opti,
     discriminator=discriminator,
     disc_opti=disc_opti,
-    n_epochs=N_EPOCHS,
-    batch_size=BATCH_SIZE,
+    n_epochs=int(N_EPOCHS),
+    batch_size=int(BATCH_SIZE),
     reload_w=RELOAD_W,
-    checkpoint=CHECKPOINT,
+    checkpoint=int(CHECKPOINT),
     workbook=False
 )
