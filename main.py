@@ -4,7 +4,7 @@ from data_restoration.load_data import *
 
 if int(BASE_MODEL) == 1 :
     # load head cats
-    data = load_data_head_small(nrows='all',mode='gcloud')
+    data = load_data_head_small(nrows='all',mode=MODE)
     data_train = data[:-100]
     data_test = data[-100:]
     print('dataset used = processed_dataset_head_small.h5')

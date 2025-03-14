@@ -140,8 +140,8 @@ def train_base_model(data,data_damaged,
                                                         generator_optimizer=generator_optimizer,
                                                         discriminator=discriminator,
                                                         discriminator_optimizer=discriminator_optimizer)
-            history_disc.append(loss_disc)
-            history_gen.append(loss_gen)
+            history_disc.append(float(loss_disc))
+            history_gen.append(float(loss_gen))
             print(loss_gen)
 
             print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', loss_gen, 'loss_disc', loss_disc)

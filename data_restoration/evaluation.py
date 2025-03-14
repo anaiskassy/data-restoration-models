@@ -57,12 +57,12 @@ def evaluation_base_model(data_test,generator,discriminator,workbook=False) :
     # testing models
     generated_images = generator(data_test_damaged, training=False)
     real_output = discriminator(data_test, training=False)
-    fake_output = discriminator(generated_images, training=True)
+    fake_output = discriminator(generated_images, training=False)
 
-    gen_loss = generator_loss_base(fake_output)
-    disc_loss = discriminator_loss_base(real_output, fake_output)
+    gen_loss = float(generator_loss_base(fake_output))
+    disc_loss = float(discriminator_loss_base(real_output, fake_output))
 
-    metrics = pd.DataFrame({'history_generator_loss' : gen_loss,'history_discriminator_loss' : disc_loss})
+    metrics = pd.DataFrame({'history_generator_loss' : [gen_loss],'history_discriminator_loss' : [disc_loss]})
     local_path_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test', f"{time.strftime('%Y%m%d-%H%M%S')}.csv")
     path_dir_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test')
     if workbook :
@@ -82,17 +82,19 @@ def lire_metrics(string):
 
 def evaluation_base_model_2(data_test,generator,discriminator,workbook=False) :
     # preprocessing
-    data_test_damaged , pieces_test = damaging_opti_dataset(data_test) /255
+    data_test_damaged , pieces_test = damaging_opti_dataset(data_test)
+    data_test_damaged = data_test_damaged / 255
+    pieces_test = pieces_test / 255
 
     # testing models
     generated_images = generator(data_test_damaged, training=False)
     real_output = discriminator(pieces_test, training=False)
-    fake_output = discriminator(generated_images, training=True)
+    fake_output = discriminator(generated_images, training=False)
 
-    gen_loss = generator_loss_base(fake_output)
-    disc_loss = discriminator_loss_base(real_output, fake_output)
+    gen_loss = float(generator_loss_base(fake_output))
+    disc_loss = float(discriminator_loss_base(real_output, fake_output))
 
-    metrics = pd.DataFrame({'history_generator_loss' : gen_loss,'history_discriminator_loss' : disc_loss})
+    metrics = pd.DataFrame({'history_generator_loss' : [gen_loss],'history_discriminator_loss' : [disc_loss]})
     local_path_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test', f"{time.strftime('%Y%m%d-%H%M%S')}.csv")
     path_dir_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test')
     if workbook :
@@ -112,7 +114,9 @@ def run_base_model_2(data_train,
                    n_epochs=5,batch_size=100,workbook=False,
                    checkpoint=1,reload_w=0) :
     # preprocessing data
-    data_train_damaged , pieces_train = damaging_opti_dataset(data_train) /255
+    data_train_damaged , pieces_train = damaging_opti_dataset(data_train)
+    data_train_damaged = data_train_damaged / 255
+    pieces_train = pieces_train / 255
     print('data preprocessed')
 
     # reload weights if needed
