@@ -17,7 +17,7 @@ def run_base_model(data_train,
     print('data preprocessed')
 
     # reload weights if needed
-    if reload_w :
+    if reload_w == "Yes" :
         local_path_gen = os.path.join(PATH_MODELS,'base_model','models','generator')
         local_path_dis = os.path.join(PATH_MODELS,'base_model','models','discriminator')
         if workbook :
