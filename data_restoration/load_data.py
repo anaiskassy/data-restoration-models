@@ -56,7 +56,7 @@ def load_data_head_small(nrows='all',mode='local',workbook=False):
     if mode == 'gcloud' :
         # téléchargement en amont
         client = storage.Client()
-        blob = list(client.get_bucket("data_restoration_anaiskassy_small").list_blobs(prefix="data/preprocessed_data/"))[1]
+        blob = list(client.get_bucket(BUCKET_NAME_SMALL).list_blobs(prefix="data/preprocessed_data/"))[1]
         blob.download_to_filename(data_processed_path)
 
     # Load les données :

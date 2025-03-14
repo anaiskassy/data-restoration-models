@@ -80,7 +80,29 @@ def generator_loss_unet(fake_output):
     pass
 
 def make_discriminator_unet_model() :
-    pass
+    model = tf.keras.Sequential()
+    # normalization
+    model.add(layers.Normalization(input_shape=(16,16,3)))
+    # encoding
+    # down 1
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False,input_shape=(16, 16, 3)))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 2
+    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 3
+    model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # down 4
+    model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.LeakyReLU(alpha=0.2))
+    # out
+    model.add(layers.Conv2D(512, (3, 3), activation='sigmoid', strides=(1, 1), padding='same', use_bias=False))
+    return model
 
 def discriminator_optimizer_unet() :
     pass
