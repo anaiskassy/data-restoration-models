@@ -16,6 +16,13 @@ def init_base_model(lr = 1e-4):
     disc_opti = discriminator_optimizer_base(lr)
     return generator,gen_opti,discriminator,disc_opti
 
+def init_model_2(lr = 1e-4):
+    generator = make_generator_model_2()
+    discriminator = make_discriminator_model_2()
+    gen_opti = generator_optimizer_base(lr)
+    disc_opti = discriminator_optimizer_base(lr)
+    return generator,gen_opti,discriminator,disc_opti
+
 
 def make_generator_base_model():
     model = tf.keras.Sequential()
@@ -30,6 +37,19 @@ def make_generator_base_model():
 
     return model
 
+def make_generator_model_2():
+    model = tf.keras.Sequential()
+
+    model.add(layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False,input_shape=(64, 64, 3)))
+    model.add(layers.ReLU())
+
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.ReLU())
+
+    model.add(layers.Conv2D(3, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='sigmoid'))
+
+    return model
+
 def generator_loss_base(fake_output):
     cross_entropy = tf.keras.losses.BinaryCrossentropy()
     return cross_entropy(tf.ones_like(fake_output), fake_output)
@@ -41,6 +61,21 @@ def generator_optimizer_base(learning_rate = 1e-4):
 def make_discriminator_base_model():
     model = tf.keras.Sequential()
     model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',input_shape=(64, 64, 3)))
+    model.add(layers.ReLU())
+    model.add(layers.Dropout(0.3))
+
+    model.add(layers.Conv2D(128, (5, 5), strides=(3, 3), padding='same'))
+    model.add(layers.ReLU())
+    model.add(layers.Dropout(0.3))
+
+    model.add(layers.Flatten())
+    model.add(layers.Dense(1,activation='sigmoid'))
+
+    return model
+
+def make_discriminator_model_2():
+    model = tf.keras.Sequential()
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',input_shape=(16, 16, 3)))
     model.add(layers.ReLU())
     model.add(layers.Dropout(0.3))
 
