@@ -10,14 +10,14 @@ def run_base_model(data_train,
                    generator,gen_opti,
                    discriminator,disc_opti,
                    n_epochs=5,batch_size=100,workbook=False,
-                   checkpoint=1,reload_w=False) :
+                   checkpoint=1,reload_w=0) :
     # preprocessing data
     data_train_damaged = damaging_dataset(data_train) /255
     data_train = data_train / 255
     print('data preprocessed')
 
     # reload weights if needed
-    if reload_w == "Yes" :
+    if reload_w == 1 :
         local_path_gen = os.path.join(PATH_MODELS,'base_model','models','generator')
         local_path_dis = os.path.join(PATH_MODELS,'base_model','models','discriminator')
         if workbook :
@@ -55,3 +55,7 @@ def evaluation_base_model(data_test,ind_folder = -1) :
 
     #return gen_losses, disc_losses , predictions
     pass
+
+
+def lire_metrics(string):
+    return float(string.replace('tf.Tensor(','').replace(', shape=(), dtype=float32)',''))
