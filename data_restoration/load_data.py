@@ -8,7 +8,7 @@ import h5py
 from google.cloud import storage
 
 
-def load_data_small(nrows='all',workbook=False):
+def load_data_small(nrows='all',mode='local',workbook=False):
     """
     load data h5 from local dataset_small
     """
@@ -18,9 +18,16 @@ def load_data_small(nrows='all',workbook=False):
     else : # si lancement depuis le terminal
         data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_small.h5")
 
-    # vérification que le fichier existe :
-    if not data_processed_path.is_file() :
-        print('No data at', data_processed_path)
+    if mode == 'local' :
+        # vérification que le fichier existe :
+        if not data_processed_path.is_file() :
+            print('No data at', data_processed_path)
+
+    if mode == 'gcloud' :
+        # téléchargement en amont
+        client = storage.Client()
+        blob = list(client.get_bucket("data_restoration_anaiskassy_small").list_blobs(prefix="data/preprocessed_data/"))[-1]
+        blob.download_to_filename(data_processed_path)
 
     # Load les données :
     with h5py.File(data_processed_path,"r") as dset : # 'r' read, 'with' ouvre le fichier en question
@@ -28,10 +35,11 @@ def load_data_small(nrows='all',workbook=False):
             images = dset['processed_dataset_small'][:]
         else :
             images = dset['processed_dataset_small'][:nrows]
+
     return images # matrice numpy de format (nrows,64,64,3)
 
 
-def load_data_head_small(nrows='all',workbook=False):
+def load_data_head_small(nrows='all',mode='local',workbook=False):
     """
     load data h5 from local dataset_small
     """
@@ -41,9 +49,15 @@ def load_data_head_small(nrows='all',workbook=False):
     else : # si lancement depuis le terminal
         data_processed_path = Path(PATH_PROCESSED_DATA).joinpath("processed_dataset_head_small.h5")
 
-    # vérification que le fichier existe :
-    if not data_processed_path.is_file() :
-        print('No data at', data_processed_path)
+    if mode == 'local' :
+        # vérification que le fichier existe :
+        if not data_processed_path.is_file() :
+            print('No data at', data_processed_path)
+    if mode == 'gcloud' :
+        # téléchargement en amont
+        client = storage.Client()
+        blob = list(client.get_bucket("data_restoration_anaiskassy_small").list_blobs(prefix="data/preprocessed_data/"))[1]
+        blob.download_to_filename(data_processed_path)
 
     # Load les données :
     with h5py.File(data_processed_path,"r") as dset : # 'r' read, 'with' ouvre le fichier en question
@@ -54,9 +68,9 @@ def load_data_head_small(nrows='all',workbook=False):
     return images
 
 
-def load_data_small_all(nrows='all',workbook=False): # nrows pour chaque dataset
-    image1 = load_data_small(nrows,workbook)
-    image2 = load_data_head_small(nrows,workbook)
+def load_data_small_all(nrows='all',mode='local',workbook=False): # nrows pour chaque dataset
+    image1 = load_data_small(nrows,mode,workbook)
+    image2 = load_data_head_small(nrows,mode,workbook)
 
     images = np.vstack([image1,image2]) # permet de faire 1 seule matrice de taille (2nrows,64,64,3)
     return images

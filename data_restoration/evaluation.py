@@ -10,14 +10,14 @@ def run_base_model(data_train,
                    generator,gen_opti,
                    discriminator,disc_opti,
                    n_epochs=5,batch_size=100,workbook=False,
-                   checkpoint=1,reload_w = False) :
+                   checkpoint=1,reload_w=0) :
     # preprocessing data
     data_train_damaged = damaging_dataset(data_train) /255
     data_train = data_train / 255
     print('data preprocessed')
 
     # reload weights if needed
-    if reload_w == "Yes" :
+    if reload_w == 1 :
         local_path_gen = os.path.join(PATH_MODELS,'base_model','models','generator')
         local_path_dis = os.path.join(PATH_MODELS,'base_model','models','discriminator')
         if workbook :
@@ -49,9 +49,32 @@ def run_base_model(data_train,
     return history_gen, history_disc , predictions , progressive_output
 
 
-def evaluation_base_model(data_test,ind_folder = -1) :
-    # load data
-    # load model
+def evaluation_base_model(data_test,generator,discriminator,workbook=False) :
+    # preprocessing
+    data_test_damaged = damaging_dataset(data_test) /255
+    data_test = data_test / 255
 
-    #return gen_losses, disc_losses , predictions
-    pass
+    # testing models
+    generated_images = generator(data_test_damaged, training=False)
+    real_output = discriminator(data_test, training=False)
+    fake_output = discriminator(generated_images, training=True)
+
+    gen_loss = generator_loss_base(fake_output)
+    disc_loss = discriminator_loss_base(real_output, fake_output)
+
+    metrics = pd.DataFrame({'history_generator_loss' : gen_loss,'history_discriminator_loss' : disc_loss})
+    local_path_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test', f"{time.strftime('%Y%m%d-%H%M%S')}.csv")
+    path_dir_metrics = os.path.join(PATH_MODELS,'base_model','metrics_test')
+    if workbook :
+        local_path_metrics = os.path.join('..',local_path_metrics)
+        path_dir_metrics = os.path.join('..',path_dir_metrics)
+    if not os.path.exists(path_dir_metrics) :
+        os.makedirs(path_dir_metrics)
+    metrics.to_csv(local_path_metrics)
+    print('metrics saved')
+
+    return gen_loss, disc_loss, generated_images
+
+
+def lire_metrics(string):
+    return float(string.replace('tf.Tensor(','').replace(', shape=(), dtype=float32)',''))
