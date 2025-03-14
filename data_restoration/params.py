@@ -13,7 +13,9 @@ CHECKPOINT=os.environ.get("CHECKPOINT")
 RELOAD_W=os.environ.get("RELOAD_W")
 BATCH_SIZE=os.environ.get("BATCH_SIZE")
 MODE=os.environ.get("MODE")
-BASE_MODEL=os.environ.get("BASE_MODEL")
+MODEL=os.environ.get("BASE_MODEL")
+DATASET=os.environ.get("DATASET")
+N_ROWS=os.environ.get("N_ROWS")
 
 ##################  CLOUD STORAGE  ##################
 BUCKET_NAME = os.environ.get("BUCKET_NAME")

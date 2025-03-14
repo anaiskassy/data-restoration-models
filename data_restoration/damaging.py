@@ -31,7 +31,7 @@ def damaging_dataset(dataset,percent=5,rand=False):
     return dataset_damaged
 
 
-def damaging_opti(X, n_dim):
+def damaging_opti(X, n_dim=16):
     '''
     en argumements matrice et un pourcentage de détérioration
     retourne l'image avec un carré blanc
@@ -54,7 +54,7 @@ def damaging_opti(X, n_dim):
 def damaging_opti_dataset(dataset,n_dim=16):
     dataset_damaged = dataset.copy()
     #dataset_partie = np.ones((n_dim, n_dim), dtype=np.uint8)
-    dataset_partie = dataset[:,:n_dim,:n_dim,:]
+    dataset_partie = dataset[:,:n_dim,:n_dim,:].copy()
 
     for i in range(dataset.shape[0]) :
         dataset_damaged[i,:,:,:] , dataset_partie[i,:,:,:] = damaging_opti(dataset[i,:,:,:],n_dim)
@@ -65,11 +65,15 @@ def damaging_opti_dataset(dataset,n_dim=16):
 
 
 
-def postprocessing_dataset(X_full,X_part,n_dim):
+def postprocessing_dataset(X_full,X_part,n_dim=16):
     for element in range(X_full.shape[0]) :
         image = X_full[element]
         ind = int(round((image.shape[0]-n_dim)/2,0))
         partie = X_part[element]
+        if np.max(image) > 1 :
+            image = image /255
+        if np.max(partie) > 1 :
+            partie = partie /255
         rebuild_image = image.copy()
         for i in range(image.shape[0]) :
             for j in range(image.shape[1]) :
