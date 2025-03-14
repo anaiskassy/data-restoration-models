@@ -170,11 +170,9 @@ def train_unet_model(data,data_damaged,
                                                         generator_optimizer=generator_optimizer,
                                                         discriminator=discriminator,
                                                         discriminator_optimizer=discriminator_optimizer)
-            history_disc.append(loss_disc)
-            history_gen.append(loss_gen)
-            print(loss_gen)
-
-            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', loss_gen, 'loss_disc', loss_disc)
+            history_disc.append(float(loss_disc))
+            history_gen.append(float(loss_gen))
+            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
 
         if (epoch + 1)%chkpt == 0 or epoch == epochs - 1:
             # Show output pour faire une GIF:

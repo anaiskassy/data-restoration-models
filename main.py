@@ -2,6 +2,7 @@ from data_restoration.evaluation import *
 from data_restoration.base_models import *
 from data_restoration.load_data import *
 from data_restoration.unet_models import *
+from data_restoration.params import *
 
 # ------------------- load data ----------------------#
 

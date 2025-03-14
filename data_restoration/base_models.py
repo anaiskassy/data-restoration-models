@@ -148,9 +148,7 @@ def train_base_model(data,data_damaged,
                                                         discriminator_optimizer=discriminator_optimizer)
             history_disc.append(float(loss_disc))
             history_gen.append(float(loss_gen))
-            print(loss_gen)
-
-            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', loss_gen, 'loss_disc', loss_disc)
+            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
 
         if (epoch + 1)%chkpt == 0 or epoch == epochs - 1:
             # Show output pour faire une GIF:
@@ -220,7 +218,7 @@ def train_base_model_2(data,data_damaged,
             history_gen.append(float(loss_gen))
             print(loss_gen)
 
-            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', loss_gen, 'loss_disc', loss_disc)
+            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
 
         if (epoch + 1)%chkpt == 0 or epoch == epochs - 1:
             # Show output pour faire une GIF:

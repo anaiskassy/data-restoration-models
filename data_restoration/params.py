@@ -13,7 +13,7 @@ CHECKPOINT=os.environ.get("CHECKPOINT")
 RELOAD_W=os.environ.get("RELOAD_W")
 BATCH_SIZE=os.environ.get("BATCH_SIZE")
 MODE=os.environ.get("MODE")
-MODEL=os.environ.get("BASE_MODEL")
+MODEL=os.environ.get("MODEL")
 DATASET=os.environ.get("DATASET")
 N_ROWS=os.environ.get("N_ROWS")
 
