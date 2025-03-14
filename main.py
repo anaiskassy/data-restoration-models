@@ -38,4 +38,10 @@ if int(BASE_MODEL) == 1 :
     print('models evaluated')
 
 if int(BASE_MODEL) == 2 :
+    # load head cats
+    data = load_data_head_small(nrows='all',mode='gcloud')
+    data_train = data[:-100]
+    data_test = data[-100:]
+    print('dataset used = processed_dataset_head_small.h5')
+    print('train = dataset[:-100] --- test = dataset[-100:]')
     print('model pas encore prêt')
