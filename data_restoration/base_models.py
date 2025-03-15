@@ -36,7 +36,7 @@ def generator_loss_base(fake_output):
     return cross_entropy(tf.ones_like(fake_output), fake_output)
 
 def generator_optimizer_base(learning_rate = 1e-4):
-    return tf.keras.optimizers.legacy.Adam(learning_rate)
+    return tf.keras.optimizers.legacy.Adam(learning_rate,clipnorm=1.)
 
 def make_discriminator_base_model():
     model = tf.keras.Sequential()
@@ -61,7 +61,7 @@ def discriminator_loss_base(real_output, fake_output):
     return total_loss
 
 def discriminator_optimizer_base(learning_rate = 1e-4):
-    return tf.keras.optimizers.legacy.Adam(learning_rate)
+    return tf.keras.optimizers.legacy.Adam(learning_rate,clipnorm=1.)
 
 
 #---------------- Base model 2 -----------------#
@@ -77,9 +77,11 @@ def make_generator_model_2():
     model = tf.keras.Sequential()
 
     model.add(layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False,input_shape=(64, 64, 3)))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
 
     model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
 
     model.add(layers.Conv2D(3, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='softmax'))
@@ -135,7 +137,7 @@ def train_base_model(data,data_damaged,
     history_gen = []
     history_disc = []
     start = time.time()
-    nb_batches = int(data.shape[0]/batch_size) + 1
+    nb_batches = int(np.ceil(data.shape[0]/batch_size))
 
     for epoch in range(epochs):
         for i in range(nb_batches) :
