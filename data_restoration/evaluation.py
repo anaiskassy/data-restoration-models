@@ -165,8 +165,6 @@ def run_unet_model(data_train,
                    checkpoint=10,reload_w=0) :
     # preprocessing data
     data_train_damaged , expected_output_train = damaging_opti_dataset(data_train)
-    data_train_damaged = data_train_damaged / 255
-    expected_output_train = expected_output_train / 255
     print('data preprocessed')
 
     # reload weights if needed
@@ -204,8 +202,6 @@ def run_unet_model(data_train,
 def evaluation_unet_model(data_test,generator,discriminator,workbook=False) :
     # preprocessing
     data_test_damaged , pieces_test = damaging_opti_dataset(data_test)
-    data_test_damaged = data_test_damaged / 255
-    pieces_test = pieces_test / 255
 
     # testing models
     generated_images = generator(data_test_damaged, training=False)

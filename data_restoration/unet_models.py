@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 from keras import layers,Sequential
+from keras.losses import MeanSquaredError , BinaryCrossentropy
 import time
 import h5py
 import os
@@ -20,89 +21,97 @@ def make_generator_unet_model() :
     model = tf.keras.Sequential()
     # normalization
     model.add(layers.Input(shape=(64,64,3)))
-    #model.add(layers.Normalization())
+    model.add(layers.Normalization())
     #---------------encoding---------------#
     # down 1
     model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 2
     model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 3
     model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 4
     model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 5
     model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 6
     model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     #---------------decoding---------------#
     # up 6
     model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # up 5
     model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # up 4
     model.add(layers.Conv2DTranspose(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # up 3
     model.add(layers.Conv2DTranspose(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    # model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # up 2
     model.add(layers.Conv2DTranspose(128, (5, 5), strides=(1, 1), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # up 1
     model.add(layers.Conv2DTranspose(64, (5, 5), strides=(1, 1), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
     # out
     model.add(layers.Conv2DTranspose(3, (5, 5), activation='softmax', strides=(1, 1), padding='same', use_bias=False))
     return model
 
 def generator_optimizer_unet():
-    return tf.keras.optimizers.legacy.Adam(learning_rate=.0002,beta_1=.5)
+    return tf.keras.optimizers.legacy.Adam(learning_rate=.0002,beta_1=.5,clipnorm=1.)
+
+
 
 def generator_loss_unet(fake_output):
-    cross_entropy = tf.keras.losses.BinaryCrossentropy()
-    return cross_entropy(tf.ones_like(fake_output), fake_output)
+    cross_entropy = BinaryCrossentropy()
+    loss_gan = cross_entropy(tf.ones_like(fake_output), fake_output)
+    return loss_gan
+
+def pixel_loss_unet(generated_image,expected_image):
+    mse = MeanSquaredError()
+    loss_pixel = mse(expected_image,generated_image)/(256*3)
+    return loss_pixel
 
 
 def make_discriminator_unet_model() :
     model = tf.keras.Sequential()
     # normalization
     model.add(layers.Input(shape=(16,16,3)))
-    #model.add(layers.Normalization())
+    model.add(layers.Normalization())
     # encoding
     # down 1
     model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 2
     model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 3
     model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # down 4
     model.add(layers.Conv2D(512, (3, 3), strides=(2, 2), padding='same', use_bias=False))
-    #model.add(layers.BatchNormalization(epsilon=1e-5,momentum=.1))
+    # model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
     # out
     model.add(layers.Conv2D(32, (3, 3), strides=(1, 1), padding='same', use_bias=False))
@@ -114,7 +123,8 @@ def make_discriminator_unet_model() :
     return model
 
 def discriminator_optimizer_unet() :
-    return tf.keras.optimizers.legacy.Adam(learning_rate=.0002,beta_1=.5)
+    return tf.keras.optimizers.legacy.Adam(learning_rate=.0002,beta_1=.5,clipnorm=1.)
+
 
 def discriminator_loss_unet(real_output, fake_output):
     cross_entropy = tf.keras.losses.BinaryCrossentropy()
@@ -137,6 +147,8 @@ def train_step_unet_model(images,images_damaged,
       fake_output = discriminator(generated_images, training=True)
 
       gen_loss = generator_loss_unet(fake_output)
+    #  pixel_loss = pixel_loss_unet(generated_image=generated_images,expected_image=images)
+    #  gen_loss = gen_loss + pixel_loss
       disc_loss = discriminator_loss_unet(real_output, fake_output)
 
     gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
@@ -158,7 +170,7 @@ def train_unet_model(data,data_damaged,
     history_gen = []
     history_disc = []
     start = time.time()
-    nb_batches = int(data.shape[0]/batch_size) + 1
+    nb_batches = int(np.ceil(data.shape[0]/batch_size))
 
     for epoch in range(epochs):
         for i in range(nb_batches) :
