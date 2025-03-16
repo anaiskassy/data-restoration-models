@@ -73,6 +73,10 @@ def init_model_2(lr = 1e-4):
     disc_opti = discriminator_optimizer_base(lr)
     return generator,gen_opti,discriminator,disc_opti
 
+def wasserstein_loss(y_true,y_pred):
+    #y_true = 1 si vrai / -1 si faux
+    return tf.reduce_mean(y_true*y_pred)
+
 def make_generator_model_2():
     model = tf.keras.Sequential()
 
@@ -103,6 +107,16 @@ def make_discriminator_model_2():
     model.add(layers.Dense(1,activation='sigmoid'))
 
     return model
+
+def generator_loss_base_2(fake_output):
+    loss_gan = wasserstein_loss(tf.ones_like(fake_output), fake_output)
+    return loss_gan
+
+def discriminator_loss_base_2(real_output, fake_output):
+    real_loss = wasserstein_loss(tf.ones_like(real_output), real_output)
+    fake_loss = wasserstein_loss(-tf.ones_like(fake_output), fake_output)
+    total_loss = real_loss + fake_loss
+    return total_loss
 
 #---------------- Training -----------------#
 
@@ -195,6 +209,28 @@ def train_base_model(data,data_damaged,
 
     return history_gen, history_disc , predictions , progressive_output
 
+@tf.function
+def train_step_base_model_2(images,images_damaged,
+                          generator,generator_optimizer,
+                          discriminator,discriminator_optimizer):
+
+    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+      generated_images = generator(images_damaged, training=True)
+
+      real_output = discriminator(images, training=True)
+      fake_output = discriminator(generated_images, training=True)
+
+      gen_loss = generator_loss_base_2(fake_output)
+      disc_loss = discriminator_loss_base_2(real_output, fake_output)
+
+    gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
+    gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
+
+    generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
+    discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
+    return gen_loss, disc_loss
+
+
 def train_base_model_2(data,data_damaged,
           generator,generator_optimizer,
           discriminator,discriminator_optimizer,
@@ -205,22 +241,21 @@ def train_base_model_2(data,data_damaged,
     history_gen = []
     history_disc = []
     start = time.time()
-    nb_batches = int(data.shape[0]/batch_size) + 1
+    nb_batches = int(np.ceil(data.shape[0]/batch_size))
 
     for epoch in range(epochs):
         for i in range(nb_batches) :
             image_batch = data[batch_size*i : (i+1)*batch_size,:,:,:]
             image_damaged_batch = data_damaged[batch_size*i : (i+1)*batch_size,:,:,:]
-            loss_gen, loss_disc = train_step_base_model(image_batch,image_damaged_batch,
+            loss_gen, loss_disc = train_step_base_model_2(image_batch,image_damaged_batch,
                                                         generator=generator,
                                                         generator_optimizer=generator_optimizer,
                                                         discriminator=discriminator,
                                                         discriminator_optimizer=discriminator_optimizer)
             history_disc.append(float(loss_disc))
             history_gen.append(float(loss_gen))
-            print(loss_gen)
 
-            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
+            print('epoch', epoch+1,'batch',i+1,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
 
         if (epoch + 1)%chkpt == 0 or epoch == epochs - 1:
             # Show output pour faire une GIF:
