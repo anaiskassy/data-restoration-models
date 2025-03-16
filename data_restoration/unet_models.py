@@ -232,7 +232,7 @@ def train_unet_model(data,data_damaged,
                                                         generator_optimizer=generator_optimizer,
                                                         discriminator=discriminator)
 
-            if nb_iter == 0 or nb_iter == 5 :
+            if nb_iter == 0 or nb_iter == 10 :
                 loss_disc = train_step_unet_dis(images=image_batch,
                                                         images_damaged=image_damaged_batch,
                                                         generator=generator,
