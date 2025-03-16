@@ -10,6 +10,12 @@ import h5py
 import os
 from data_restoration.params import *
 
+
+def wasserstein_loss(y_true,y_pred):
+    #y_true = 1 si vrai / -1 si faux
+    return tf.reduce_mean(y_true*y_pred)
+
+
 def init_unet_model():
     generator_unet = make_generator_unet_model()
     discriminator_unet = make_discriminator_unet_model()
@@ -81,14 +87,17 @@ def generator_optimizer_unet():
 
 
 def generator_loss_unet(fake_output):
-    cross_entropy = BinaryCrossentropy()
-    loss_gan = cross_entropy(tf.ones_like(fake_output), fake_output)
+    #cross_entropy = BinaryCrossentropy()
+    # loss_gan = cross_entropy(tf.ones_like(fake_output), fake_output)
+    # --------------#
+    # test avec Wasserstein loss
+    loss_gan = wasserstein_loss(tf.ones_like(fake_output), fake_output)
     return loss_gan
 
-def pixel_loss_unet(generated_image,expected_image):
-    mse = MeanSquaredError()
-    loss_pixel = mse(expected_image,generated_image)/(256*3)
-    return loss_pixel
+# def pixel_loss_unet(generated_image,expected_image):
+#     mse = MeanSquaredError()
+#     loss_pixel = tf.sqrt(mse(expected_image,generated_image)) * 1e-4
+#     return loss_pixel
 
 
 def make_discriminator_unet_model() :
@@ -122,41 +131,81 @@ def make_discriminator_unet_model() :
     model.add(layers.Dense(1,activation='sigmoid'))
     return model
 
+
 def discriminator_optimizer_unet() :
     return tf.keras.optimizers.legacy.Adam(learning_rate=.0002,beta_1=.5,clipnorm=1.)
 
 
-def discriminator_loss_unet(real_output, fake_output):
-    cross_entropy = tf.keras.losses.BinaryCrossentropy()
-    real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-    total_loss = real_loss + fake_loss
+def gradient_penalty(discriminator,real_images,fake_images):
+    alpha = tf.random.uniform([real_images.shape[0],1,1,1],0.,1.)
+    interpolated = alpha * real_images + (1-alpha)*fake_images
+    with tf.GradientTape() as tape :
+        tape.watch(interpolated)
+        pred = discriminator(interpolated)
+    grads = tape.gradient(pred,interpolated)
+    norm = tf.sqrt(tf.reduce_sum(tf.square(grads),axis=[1,2,3]))
+    gradient_penalty = tf.reduce_mean((norm - 1.0)**2)
+    return gradient_penalty
+
+
+def discriminator_loss_unet(real_output, fake_output,discriminator,real_images,fake_images):
+    # cross_entropy = tf.keras.losses.BinaryCrossentropy()
+    # test 3 :
+    #cross_entropy = tf.keras.losses.CategoricalCrossentropy()
+    # real_loss = cross_entropy(tf.ones_like(real_output), real_output)
+    # fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+
+    # --------------#
+    # test avec Wasserstein loss
+    lambda_gp = 10
+    real_loss = wasserstein_loss(tf.ones_like(real_output), real_output)
+    fake_loss = wasserstein_loss(-tf.ones_like(fake_output), fake_output)
+    gp = gradient_penalty(discriminator,real_images,fake_images)
+    total_loss = real_loss + fake_loss + lambda_gp * gp
     return total_loss
 
+def clip_weights(model, clip_value=0.01):
+    """Clip les poids du modèle dans un intervalle [-clip_value, clip_value]."""
+    # Clip les variables d'entraînement du modèle
+    for var in model.trainable_variables:
+        clipped_var = tf.clip_by_value(var, -clip_value, clip_value)
+        var.assign(clipped_var)  # Remplace la variable par la version clippée
 
 
 @tf.function
-def train_step_unet_model(images,images_damaged,
+def train_step_unet_gen(images_damaged,
                           generator,generator_optimizer,
+                          discriminator):
+
+    with tf.GradientTape() as gen_tape:
+      generated_images = generator(images_damaged, training=True)
+      fake_output = discriminator(generated_images, training=True)
+      gen_loss = generator_loss_unet(fake_output)
+
+    gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
+    gradients_of_generator = map(lambda grad : tf.clip_by_value(grad,-10.,10.),gradients_of_generator)
+
+    generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
+    clip_weights(generator)
+    return float(gen_loss)
+
+@tf.function
+def train_step_unet_dis(images,images_damaged,
+                          generator,
                           discriminator,discriminator_optimizer):
 
-    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+    with tf.GradientTape() as disc_tape:
       generated_images = generator(images_damaged, training=True)
 
       real_output = discriminator(images, training=True)
       fake_output = discriminator(generated_images, training=True)
+      disc_loss = discriminator_loss_unet(real_output, fake_output, discriminator, images, generated_images)
 
-      gen_loss = generator_loss_unet(fake_output)
-    #  pixel_loss = pixel_loss_unet(generated_image=generated_images,expected_image=images)
-    #  gen_loss = gen_loss + pixel_loss
-      disc_loss = discriminator_loss_unet(real_output, fake_output)
-
-    gradients_of_generator = gen_tape.gradient(gen_loss, generator.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
-
-    generator_optimizer.apply_gradients(zip(gradients_of_generator, generator.trainable_variables))
+    gradients_of_discriminator = map(lambda grad : tf.clip_by_value(grad,-10.,10.),gradients_of_discriminator)
     discriminator_optimizer.apply_gradients(zip(gradients_of_discriminator, discriminator.trainable_variables))
-    return float(gen_loss), float(disc_loss)
+    clip_weights(discriminator)
+    return float(disc_loss)
 
 
 
@@ -171,20 +220,32 @@ def train_unet_model(data,data_damaged,
     history_disc = []
     start = time.time()
     nb_batches = int(np.ceil(data.shape[0]/batch_size))
+    data = data.astype('float32')
 
+    nb_iter = 0
     for epoch in range(epochs):
         for i in range(nb_batches) :
             image_batch = data[batch_size*i : (i+1)*batch_size,:,:,:]
             image_damaged_batch = data_damaged[batch_size*i : (i+1)*batch_size,:,:,:]
-            loss_gen, loss_disc = train_step_unet_model(images=image_batch,
-                                                        images_damaged=image_damaged_batch,
+            loss_gen = train_step_unet_gen(images_damaged=image_damaged_batch,
                                                         generator=generator,
                                                         generator_optimizer=generator_optimizer,
+                                                        discriminator=discriminator)
+
+            if nb_iter == 0 or nb_iter == 5 :
+                loss_disc = train_step_unet_dis(images=image_batch,
+                                                        images_damaged=image_damaged_batch,
+                                                        generator=generator,
                                                         discriminator=discriminator,
                                                         discriminator_optimizer=discriminator_optimizer)
+
+                nb_iter = 0
+
+            nb_iter += 1
             history_disc.append(float(loss_disc))
             history_gen.append(float(loss_gen))
-            print('epoch', epoch,'batch',i,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
+
+            print('epoch', epoch+1,'batch',i+1,'/', nb_batches, time.time()-start, 'loss_gen', float(loss_gen), 'loss_disc', float(loss_disc))
 
         if (epoch + 1)%chkpt == 0 or epoch == epochs - 1:
             # Show output pour faire une GIF:
