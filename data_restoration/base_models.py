@@ -81,6 +81,19 @@ def make_generator_model_2():
     model = tf.keras.Sequential()
 
     model.add(layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False,input_shape=(64, 64, 3)))
+    model.add(layers.ReLU())
+
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
+    model.add(layers.ReLU())
+
+    model.add(layers.Conv2D(3, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='softmax'))
+
+    return model
+
+def make_generator_model_3():
+    model = tf.keras.Sequential()
+
+    model.add(layers.Conv2D(128, (5, 5), strides=(1, 1), padding='same', use_bias=False,input_shape=(64, 64, 3)))
     model.add(layers.BatchNormalization())
     model.add(layers.ReLU())
 
