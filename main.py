@@ -202,17 +202,6 @@ if int(MODEL) == 5 :
         gan_model.load_weights(path_comb_to_reload)
 
     # train
-    history_gen, history_disc , predictions , progressive_output = train_unet_model_copy(
-        data=expected_output_train,
-        data_damaged=data_train_damaged,
-        generator=generator,
-        generator_optimizer=gen_opti,
-        discriminator=discriminator,
-        discriminator_optimizer=disc_opti,
-        epochs=int(N_EPOCHS),
-        batch_size=int(BATCH_SIZE),
-        chkpt = int(CHECKPOINT), workbook=False
-    )
 
     g_hist, c1_hist , c2_hist, predictions = train(g_model,
                                                c_model,
