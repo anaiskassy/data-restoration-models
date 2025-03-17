@@ -8,3 +8,4 @@ data_restoration.egg-info/
 notebooks/
 .pyenv
 build/
+models/unet_model/generator/*.h5
