@@ -34,7 +34,7 @@ class ClipConstraint(Constraint):
 
 # calculate wasserstein loss
 def wasserstein_loss(y_true, y_pred):
-	return backend(y_true * y_pred)
+	return tf.reduce_mean(y_true * y_pred)
 
 
 # define the standalone critic model
@@ -65,7 +65,7 @@ def define_critic(in_shape=(16,16,3)):
 	model.add(Flatten())
 	model.add(Dense(1))
 	# compile model
-	opt = RMSprop(lr=0.00005)
+	opt = RMSprop(learning_rate=0.00005)
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
@@ -134,7 +134,7 @@ def define_gan(generator, critic):
 	# add the critic
 	model.add(critic)
 	# compile model
-	opt = RMSprop(lr=0.00005)
+	opt = RMSprop(learning_rate=0.00005)
 	model.compile(loss=wasserstein_loss, optimizer=opt)
 	return model
 
