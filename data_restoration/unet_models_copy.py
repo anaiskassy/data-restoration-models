@@ -63,11 +63,12 @@ def build_reconstruction() :
     model.add(layers.BatchNormalization(epsilon=1e-8))
     model.add(layers.ReLU())
     # out
-    model.add(layers.Conv2DTranspose(3, (4, 4), activation='tanh', strides=(1, 1), padding='same', use_bias=False))
+    model.add(layers.Conv2DTranspose(3, (4, 4), activation='softmax', strides=(1, 1), padding='same', use_bias=False))
     return model
 
+
 def recon_optimizer_unet():
-    return tf.keras.optimizers.legacy.Adam(learning_rate=.002,beta_1=.5,clipnorm=1.)
+    return tf.keras.optimizers.RMSprop(learning_rate=.00002,beta_1=.5,clipnorm=1.)
 
 
 def generator_loss_unet(fake_output):
@@ -104,7 +105,7 @@ def build_adversarial() :
 
 
 def adv_optimizer_unet() :
-    return tf.keras.optimizers.legacy.Adam(learning_rate=.002,beta_1=.5,clipnorm=1.)
+    return tf.keras.optimizers.RMSprop(learning_rate=.00002,beta_1=.5,clipnorm=1.)
 
 
 def gradient_penalty(discriminator,real_images,fake_images):
