@@ -1,6 +1,8 @@
 # https://machinelearningmastery.com/how-to-code-a-wasserstein-generative-adversarial-network-wgan-from-scratch/
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
 from keras import backend
 from keras.optimizers import RMSprop
 from keras.models import Sequential
@@ -32,30 +34,30 @@ class ClipConstraint(Constraint):
 
 # calculate wasserstein loss
 def wasserstein_loss(y_true, y_pred):
-	return backend.mean(y_true * y_pred)
+	return backend(y_true * y_pred)
 
 
 # define the standalone critic model
-def define_critic(in_shape=(32,32,3)):
+def define_critic(in_shape=(16,16,3)):
 	# weight initialization
 	init = RandomNormal(stddev=0.02)
 	# weight constraint
 	const = ClipConstraint(0.01)
 	# define model
 	model = Sequential()
-	# downsample to 16x16
+	# downsample to 8x8
 	model.add(Conv2D(64, (4,4), strides=(2,2), padding='same', kernel_initializer=init, kernel_constraint=const, input_shape=in_shape))
 	model.add(BatchNormalization())
 	model.add(LeakyReLU(0.2))
-	# downsample to 8x8
+	# downsample to 4x4
 	model.add(Conv2D(128, (4,4), strides=(2,2), padding='same', kernel_initializer=init, kernel_constraint=const))
 	model.add(BatchNormalization())
 	model.add(LeakyReLU(0.2))
-    # downsample to 4x4
+    # downsample to 2x2
 	model.add(Conv2D(256, (4,4), strides=(2,2), padding='same', kernel_initializer=init, kernel_constraint=const))
 	model.add(BatchNormalization())
 	model.add(LeakyReLU(0.2))
-    # downsample to 2x2
+    # downsample to 1x1
 	model.add(Conv2D(512, (4,4), strides=(2,2), padding='same', kernel_initializer=init, kernel_constraint=const))
 	model.add(BatchNormalization())
 	model.add(LeakyReLU(0.2))
@@ -115,7 +117,7 @@ def define_generator(in_shape=(64,64,3)):
 	model.add(BatchNormalization())
 	model.add(ReLU(0.2))
 	# output 16x16x3
-	model.add(Conv2D(1, (2,2), activation='tanh', padding='same', kernel_initializer=init))
+	model.add(Conv2D(3, (2,2), activation='tanh', padding='same', kernel_initializer=init))
 	return model
 
 
@@ -193,7 +195,7 @@ def train(g_model, c_model, gan_model, images_damaged_input, expected_outputs, n
             g_loss = gan_model.train_on_batch(images_damaged_input_batch, y_gan)
             g_hist.append(g_loss)
             # summarize loss on this batch
-            print('epoch', epoch+1,'batch',i+1,'/', nb_batches, time.time()-start, 'loss_gan', float(g_loss), 'loss_critic', float(c1_hist[-1]), float(c2_hist[-1]))
+            print('epoch', epoch+1,'batch',i+1,'/', nb_batches, time.time()-start, 'loss_gan', float(g_hist[-1]), 'loss_critic', float(c1_hist[-1]), float(c2_hist[-1]))
 
         if (epoch + 1)%chkpt == 0 or epoch == n_epochs - 1:
             # save metrics
@@ -222,7 +224,7 @@ def train(g_model, c_model, gan_model, images_damaged_input, expected_outputs, n
 
             path_gen = os.path.join(local_path_gen,f"{time.strftime('%Y%m%d-%H%M%S')}-gen-epoch{epoch+1}.h5")
             path_disc =os.path.join(local_path_dis,f"{time.strftime('%Y%m%d-%H%M%S')}-dis-epoch{epoch+1}.h5")
-            path_comb =os.path.join(local_path_dis,f"{time.strftime('%Y%m%d-%H%M%S')}-comb-epoch{epoch+1}.h5")
+            path_comb =os.path.join(local_path_comb,f"{time.strftime('%Y%m%d-%H%M%S')}-comb-epoch{epoch+1}.h5")
 
             if not os.path.exists(local_path_gen) :
                 os.makedirs(local_path_gen)
@@ -232,7 +234,7 @@ def train(g_model, c_model, gan_model, images_damaged_input, expected_outputs, n
                 os.makedirs(local_path_comb)
             g_model.save(path_gen)
             c_model.save(path_disc)
-            gan_model.save(path_disc)
+            gan_model.save(path_comb)
 
             # client = storage.Client()
             # bucket = client.bucket(BUCKET_NAME_SMALL)
@@ -245,8 +247,8 @@ def train(g_model, c_model, gan_model, images_damaged_input, expected_outputs, n
 
 
     # Generate after the final epoch
-    predictions = g_model.predict(images_damaged_input[:20])
-    plt.imshow(predictions[0]);
+    predictions = g_model.predict(images_damaged_input[:100])
+    plt.imshow((predictions[0]+1)/2);
 
     return g_hist, c1_hist , c2_hist, predictions
 

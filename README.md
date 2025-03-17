@@ -19,7 +19,9 @@ to train and test models :
   - MODE: values ['local','gcloud'] pour charger les données
   - MODEL : values ['1' : base model avec input et output de 64x64,
                     '2' : base model avec input 64x64 et output 16x16,
-                    '3' : modèle UNET ]
+                    '3' : modèle UNET
+                    '4' : modèle UNET 2
+                    '5' : modèle combined]]
   - DATASET : values ['cat_heads','cats','both']
   - N_ROWS : values [int ou 'all'] nombre d'images à charger par dataset
 

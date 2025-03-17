@@ -75,7 +75,7 @@ def damaging_opti_normalized(X, n_dim=16):
     X_damaged = (X.copy()/255) * 2 - 1
     X_damaged_noise = (X.copy()/255) * 2 - 1
 
-    partie = X[ind:ind+n_dim,ind:ind+n_dim,:]
+    partie = X_damaged[ind:ind+n_dim,ind:ind+n_dim,:].astype('float32')
 
     for i in range(X.shape[0]) :
         for j in range(X.shape[1]) :
@@ -88,10 +88,10 @@ def damaging_opti_normalized(X, n_dim=16):
     return X_damaged, X_damaged_noise, partie
 
 def damaging_opti_dataset_normalized(dataset,n_dim=16):
-    dataset_damaged = dataset.copy()
-    dataset_damaged_noise = dataset.copy()
+    dataset_damaged = dataset.copy().astype('float32')
+    dataset_damaged_noise = dataset.copy().astype('float32')
     #dataset_partie = np.ones((n_dim, n_dim), dtype=np.uint8)
-    dataset_partie = dataset[:,:n_dim,:n_dim,:].copy()
+    dataset_partie = dataset.copy()[:,:n_dim,:n_dim,:].astype('float32')
 
     for i in range(dataset.shape[0]) :
         dataset_damaged[i,:,:,:] , dataset_damaged_noise[i,:,:,:], dataset_partie[i,:,:,:] = damaging_opti_normalized(dataset[i,:,:,:],n_dim)
@@ -119,3 +119,27 @@ def postprocessing_dataset(X_full,X_part,n_dim=16):
         else :
             rebuild_X = np.vstack([rebuild_X,np.expand_dims(rebuild_image,axis=0)])
     return rebuild_X
+
+def postprocessing_dataset_normalized(dataset,dataset_damaged,dataset_generated,n_dim=16):
+    # normalized datasets
+    if np.max(dataset) > 1 :
+        dataset = dataset / 255
+    dataset_damaged = (dataset_damaged + 1)/2
+    dataset_generated = (dataset_generated + 1)/2
+
+    # rebuilding images
+    for element in range(dataset.shape[0]) :
+        image = dataset[element]
+        ind = int(round((image.shape[0]-n_dim)/2,0))
+        partie = dataset_generated[element]
+        rebuild_image = image.copy()
+        for i in range(image.shape[0]) :
+            for j in range(image.shape[1]) :
+                for k in range(3) :
+                    if i < ind+n_dim and i >= ind and j >= ind and j < ind + n_dim :
+                        rebuild_image[i,j,k] = partie[i-ind,j-ind,k]
+        if element == 0 :
+            rebuild_X = np.expand_dims(rebuild_image,axis=0)
+        else :
+            rebuild_X = np.vstack([rebuild_X,np.expand_dims(rebuild_image,axis=0)])
+    return dataset_damaged, rebuild_X
