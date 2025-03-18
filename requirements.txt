@@ -1,4 +1,4 @@
--e git+ssh://git@github.com/anaiskassy/data-restoration-models.git@0706be0dcc994fd9389185f1c29dde5514072bf6#egg=data_restoration
+git+https://github.com/anaiskassy/data-restoration-models.git@0706be0dcc994fd9389185f1c29dde5514072bf6#egg=data_restoration
 h5py==3.7.0
 keras==2.15.0
 matplotlib==3.5.3
@@ -18,3 +18,10 @@ google-pasta==0.2.0
 google-resumable-media==2.4.0
 google-trans-new==1.1.9
 googleapis-common-protos==1.56.4
+
+fastapi==0.108.0
+pytz
+uvicorn
+# tests
+httpx<0.28
+pytest-asyncio
