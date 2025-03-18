@@ -25,3 +25,4 @@ uvicorn
 # tests
 httpx<0.28
 pytest-asyncio
+
