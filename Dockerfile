@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # CMD ["uvicorn", "api.fast:app", "--host", "0.0.0.0", "--port", $PORT]
+#EXPOSE 8080
 CMD uvicorn api.fast:app --host 0.0.0.0 --port $PORT
 #The image should contain:
 #YESthe same Python version of your virtual env

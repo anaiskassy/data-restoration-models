@@ -26,3 +26,14 @@ to train and test models :
   - N_ROWS : values [int ou 'all'] nombre d'images à charger par dataset
 
 2. Launching main.py
+
+
+
+to launch API :
+> docker build \
+  --platform linux/amd64 \
+  -t $GCP_REGION-docker.pkg.dev/$GCP_PROJECT/data-restoration-models/$GAR_IMAGE:prod .
+
+> docker push $GCP_REGION-docker.pkg.dev/$GCP_PROJECT/data-restoration-models/$GAR_IMAGE:prod
+
+> gcloud run deploy --image $GCP_REGION-docker.pkg.dev/$GCP_PROJECT/data-restoration-models/$GAR_IMAGE:prod --memory $GAR_MEMORY --region $GCP_REGION --env-vars-file .env.yaml

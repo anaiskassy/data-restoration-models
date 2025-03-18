@@ -5,6 +5,7 @@ run_preprocessed_small:
 	python -c 'from data_restoration.preprocessing import preprocessed_data_small; preprocessed_data_small()'
 
 run_api:
+	cd ./api
 	uvicorn api.fast:app --reload
 
 reinstall_package:
