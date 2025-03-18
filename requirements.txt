@@ -1,4 +1,5 @@
 git+https://github.com/anaiskassy/data-restoration-models.git@0706be0dcc994fd9389185f1c29dde5514072bf6#egg=data_restoration
+#-e git+ssh://git@github.com/anaiskassy/data-restoration-models.git@0706be0dcc994fd9389185f1c29dde5514072bf6#egg=data_restoration
 h5py==3.7.0
 keras==2.15.0
 matplotlib==3.5.3
@@ -25,4 +26,4 @@ uvicorn
 # tests
 httpx<0.28
 pytest-asyncio
-
+python-multipart
