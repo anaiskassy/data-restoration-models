@@ -38,9 +38,9 @@ def load_model(number=1) :
 
     if number == 4 :
         path_model4 = Path("models").joinpath("generator-combined.h5")
-        # if not path_model4.is_file() :
-        #     blob_4 = bucket.blob(f"model-unet/generator/20250317-131745-gen-epoch11.h5")
-        #     blob_4.download_to_filename(path_model3)
+        if not path_model4.is_file() :
+            blob_4 = bucket.blob(f"model-combined/generator/generator-VF.h5")
+            blob_4.download_to_filename(path_model4)
         model = define_generator()
     return model
 
