@@ -6,7 +6,6 @@ COPY api api
 COPY requirements.txt requirements.txt
 
 # 4️⃣ Install dependencies
-RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # CMD ["uvicorn", "api.fast:app", "--host", "0.0.0.0", "--port", $PORT]

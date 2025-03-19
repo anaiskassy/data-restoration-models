@@ -15,9 +15,13 @@ def load_model(number=1) :
     if number == 1 :
         path_model1 = Path("models").joinpath("generator-base-1.h5")
         if not path_model1.is_file() :
+            print(f"Path model 1 is : {path_model1}\n")
             blob_1 = bucket.blob("model-base/generator/20250317-001957-gen-epoch75.h5")
             blob_1.download_to_filename(path_model1)
+            print(f"Blob 1 is : {blob_1}\n")
+
         model = make_generator_base_model()
+        print(f"Model is : {model}\n")
         model.load_weights(path_model1)
 
     if number == 2 :

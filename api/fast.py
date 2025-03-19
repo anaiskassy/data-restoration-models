@@ -6,8 +6,10 @@ from PIL import Image
 from keras.preprocessing.image import img_to_array, array_to_img
 import io
 from api.utils import *
+import os
 
 app = FastAPI()
+print(f"Current directory is {os.getcwd()}\n")
 
 model1 = load_model(number=1)
 model2 = load_model(number=2)
