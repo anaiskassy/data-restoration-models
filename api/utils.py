@@ -42,6 +42,7 @@ def load_model(number=1) :
             blob_4 = bucket.blob(f"model-combined/generator/generator-VF.h5")
             blob_4.download_to_filename(path_model4)
         model = define_generator()
+        model.load_weights(path_model4)
     return model
 
 
